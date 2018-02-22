@@ -12,11 +12,11 @@ class TeamMatchFixup
   def call(env)
     status, headers, body = @app.call(env)
     match = JSON.parse(body.inject('') {|m,o| m << o;m})
-    if match["status"] == "finished"
-      [ status, headers, body ]
-    else
+    if match["status"] == "in_progress"
       processed = process(match)
       [status, headers, [ JSON.generate(processed) ]]
+    else
+      [ status, headers, body ]
     end
   end
 
@@ -62,7 +62,7 @@ class TeamMatchFixup
     %w[team1 team2].each do |team|
       out["teams"][team]["players"].each do |player|
         %w[played_as_white played_as_black].each do |played_as|
-          if @updated_players[player["board"]][team][played_as]
+          if @updated_players[player["board"]] and @updated_players[player["board"]][team][played_as]
             player[played_as] = @updated_players[player["board"]][team][played_as]
           end
         end
